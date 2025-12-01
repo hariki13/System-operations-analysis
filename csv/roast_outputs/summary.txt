@@ -1,0 +1,8 @@
+total_time_s: 678
+start_bean: 173.2
+end_bean: 207.6
+max_bean: 207.6
+max_bean_time_s: 678
+ror_col: ror
+max_ror: 11.7
+max_ror_time_s: 124

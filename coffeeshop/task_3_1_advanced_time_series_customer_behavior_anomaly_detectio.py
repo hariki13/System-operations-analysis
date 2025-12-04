@@ -1,3 +1,4 @@
+from sqlite3 import Time
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -132,223 +133,278 @@ print(spending_segments)
 # =============================
 # 3. ANOMALY DETECTION
 # =============================
-# print('\n' + '='*70)
-# print('3. ANOMALY DETECTION')
-# print('='*70)
+print('\n' + '='*70)
+print('3. ANOMALY DETECTION')
+print('='*70)
 
 # Method 1: Statistical Z-Score (Revenue Anomalies)
-# print("\n--- Method 1: Statistical Z-Score Detection ---")
-# daily_ts['z_score'] = np.abs(stats.zscore(daily_ts['revenue']))
-# daily_ts['is_anomaly_zscore'] = daily_ts['z_score'] > 2.5
+print("\n--- Method 1: Statistical Z-Score Detection ---")
+daily_ts['z_score'] = np.abs(stats.zscore(daily_ts['revenue']))
+daily_ts['is_anomaly_zscore'] = daily_ts['z_score'] > 2.5
 
-# anomaly_days_zscore = daily_ts[daily_ts['is_anomaly_zscore']]
-# print(f"Detected {len(anomaly_days_zscore)} anomalous days using Z-score method")
-# if len(anomaly_days_zscore) > 0:
-    # print("\nAnomalous days:")
-    # print(anomaly_days_zscore[['revenue', 'transactions', 'z_score']])
-
+anomaly_days_zscore = daily_ts[daily_ts['is_anomaly_zscore']]
+print(f"Detected {len(anomaly_days_zscore)} anomalous days using Z-score method")
+if len(anomaly_days_zscore) > 0:
+    print("\nAnomalous days:")
+    print(anomaly_days_zscore[['revenue', 'transactions', 'z_score']])
 # Method 2: IQR Method (Outlier Detection)
-# print("\n--- Method 2: IQR (Interquartile Range) Method ---")
-# Q1 = daily_ts['revenue'].quantile(0.25)
-# Q3 = daily_ts['revenue'].quantile(0.75)
-# IQR = Q3 - Q1
-# lower_bound = Q1 - 1.5 * IQR
-# upper_bound = Q3 + 1.5 * IQR
-# daily_ts['is_anomaly_iqr'] = (daily_ts['revenue'] < lower_bound) | (daily_ts['revenue'] > upper_bound)
-# anomaly_days_iqr = daily_ts[daily_ts['is_anomaly_iqr']]
-# print(f"Detected {len(anomaly_days_iqr)} outlier days using IQR method")
-# print(f"Normal range: ${lower_bound:.2f} - ${upper_bound:.2f}")
-# if len(anomaly_days_iqr) > 0:
-    # print("\nOutlier days:")
-    # print(anomaly_days_iqr[['revenue', 'transactions']])
+print("\n--- Method 2: IQR (Interquartile Range) Method ---")
+Q1 = daily_ts['revenue'].quantile(0.25)
+Q3 = daily_ts['revenue'].quantile(0.75)
+IQR = Q3 - Q1
+lower_bound = Q1 - 1.5 * IQR
+upper_bound = Q3 + 1.5 * IQR
+daily_ts['is_anomaly_iqr'] = (daily_ts['revenue'] < lower_bound) | (daily_ts['revenue'] > upper_bound)
+anomaly_days_iqr = daily_ts[daily_ts['is_anomaly_iqr']]
+print(f"Detected {len(anomaly_days_iqr)} outlier days using IQR method")
+print(f"Normal range: ${lower_bound:.2f} - ${upper_bound:.2f}")
+if len(anomaly_days_iqr) > 0:
+    print("\nOutlier days:")
+    print(anomaly_days_iqr[['revenue', 'transactions']])
 
 # Method 3: Isolation Forest (Transaction-level anomalies)
-# print("\n--- Method 3: Isolation Forest (ML-based) ---")
+print("\n--- Method 3: Isolation Forest (ML-based) ---")
 # Prepare features for anomaly detection
-# features_for_anomaly = df[['money', 'hour']].copy()
-# features_for_anomaly['is_weekend'] = df['is_weekend']
-# features_for_anomaly['is_card'] = (df['cash_type'] == 'card').astype(int)
+features_for_anomaly = df[['money', 'hour']].copy()
+features_for_anomaly['is_weekend'] = df['is_weekend']
+features_for_anomaly['is_card'] = (df['cash_type'] == 'card').astype(int)
 
 # Standardize features
-# scaler = StandardScaler()
-# features_scaled = scaler.fit_transform(features_for_anomaly)
+scaler = StandardScaler()
+features_scaled = scaler.fit_transform(features_for_anomaly)
 
 # Train Isolation Forest
-# iso_forest = IsolationForest(contamination=0.05, random_state=42)
-# df['anomaly_score'] = iso_forest.fit_predict(features_scaled)
-# df['is_anomaly_ml'] = df['anomaly_score'] == -1
+iso_forest = IsolationForest(contamination=0.05, random_state=42)
+df['anomaly_score'] = iso_forest.fit_predict(features_scaled)
+df['is_anomaly_ml'] = df['anomaly_score'] == -1
 
-# anomalies_ml = df[df['is_anomaly_ml']]
-# print(f"Detected {len(anomalies_ml)} anomalous transactions using Isolation Forest")
-# print(f"Anomaly rate: {len(anomalies_ml)/len(df)*100:.2f}%")
+anomalies_ml = df[df['is_anomaly_ml']]
+print(f"Detected {len(anomalies_ml)} anomalous transactions using Isolation Forest")
+print(f"Anomaly rate: {len(anomalies_ml)/len(df)*100:.2f}%")
 
-# if len(anomalies_ml) > 0:
-    # print("\nSample anomalous transactions:")
-    # print(anomalies_ml[['date', 'hour', 'coffee_name', 'money', 'cash_type']].head(10))
-    # print("\nAnomaly characteristics:")
-    # print(anomalies_ml[['money', 'hour']].describe())
+if len(anomalies_ml) > 0:
+    print("\nSample anomalous transactions:")
+    print(anomalies_ml[['date', 'hour', 'coffee_name', 'money', 'cash_type']].head(10))
+    print("\nAnomaly characteristics:")
+    print(anomalies_ml[['money', 'hour']].describe())
 
 # Customer behavior anomalies
-# print("\n--- Unusual Purchase Patterns ---")
+print("\n--- Unusual Purchase Patterns ---")
 # Products purchased at unusual times
-# product_hour = df.groupby(['coffee_name', 'hour']).size().reset_index(name='count')
-# product_hour_pivot = product_hour.pivot(index='coffee_name', columns='hour', values='count').fillna(0)
+product_hour = df.groupby(['coffee_name', 'hour']).size().reset_index(name='count')
+product_hour_pivot = product_hour.pivot(index='coffee_name', columns='hour', values='count').fillna(0)
 
 # Find products with concentrated sales in specific hours (high variance)
-# product_variance = product_hour_pivot.var(axis=1).sort_values(ascending=False)
-# print("\nProducts with most concentrated purchase times:")
-# print(product_variance.head(5))
+product_variance = product_hour_pivot.var(axis=1).sort_values(ascending=False)
+print("\nProducts with most concentrated purchase times:")
+print(product_variance.head(5))
 
 # =============================
 # 4. ADVANCED VISUALIZATIONS
 # =============================
-# print('\n' + '='*70)
-# print('4. GENERATING ADVANCED VISUALIZATIONS')
-# print('='*70)
+print('\n' + '='*70)
+print('4. GENERATING ADVANCED VISUALIZATIONS')
+print('='*70)
 
-# sns.set_style("whitegrid")
-# fig = plt.figure(figsize=(18, 14))
+sns.set_style("whitegrid")
+fig = plt.figure(figsize=(20, 16))
 
 # Plot 1: Daily Revenue Time Series with Moving Average
-# plt.subplot(3, 3, 1)
-# plt.plot(daily_ts.index, daily_ts['revenue'], marker='o', linewidth=1, alpha=0.7, label='Daily Revenue')
-# plt.plot(daily_ts.index, daily_ts['revenue_ma7'], linewidth=2, color='red', label='7-day MA')
-# plt.fill_between(daily_ts.index, 
-                #  daily_ts['revenue_ma7'] - daily_ts['revenue_std7'],
-                #  daily_ts['revenue_ma7'] + daily_ts['revenue_std7'],
-                #  alpha=0.2, color='red')
-# if len(anomaly_days_zscore) > 0:
-#     plt.scatter(anomaly_days_zscore.index, anomaly_days_zscore['revenue'], 
-#                 color='red', s=100, marker='X', label='Anomalies', zorder=5)
-# plt.xlabel('Date')
-# plt.ylabel('Revenue ($)')
-# plt.title('Daily Revenue Trend with Anomaly Detection')
-# plt.legend()
-# plt.xticks(rotation=45)
-# plt.grid(True, alpha=0.3)
+plt.subplot(3, 3, 1)
+plt.plot(daily_ts.index, daily_ts['revenue'], marker='o', linewidth=1, alpha=0.7, label='Daily Revenue')
+plt.plot(daily_ts.index, daily_ts['revenue_ma7'], linewidth=2, color='red', label='7-day MA')
+plt.fill_between(daily_ts.index, 
+                 daily_ts['revenue_ma7'] - daily_ts['revenue_std7'],
+                 daily_ts['revenue_ma7'] + daily_ts['revenue_std7'],
+                 alpha=0.2, color='red')
+if len(anomaly_days_zscore) > 0:
+    plt.scatter(anomaly_days_zscore.index, anomaly_days_zscore['revenue'], 
+                 color='red', s=100, marker='X', label='Anomalies', zorder=5)
+plt.xlabel('Date', fontsize=9)
+plt.ylabel('Revenue ($)', fontsize=9)
+plt.title('Daily Revenue Trend with Anomaly Detection', fontsize=10)
+plt.legend(fontsize=7, loc='best')
+plt.xticks(rotation=45, fontsize=8)
+plt.yticks(fontsize=8)
+plt.grid(True, alpha=0.3)
 
 # Plot 2: Weekly Seasonality Pattern
-# plt.subplot(3, 3, 2)
-# plt.bar(weekly_pattern.index, weekly_pattern['total_revenue'], color='steelblue')
-# plt.xlabel('Day of Week')
-# plt.ylabel('Total Revenue ($)')
-# plt.title('Weekly Revenue Pattern')
-# plt.xticks(rotation=45)
+plt.subplot(3, 3, 2)
+plt.bar(weekly_pattern.index, weekly_pattern['total_revenue'], color='steelblue')
+plt.xlabel('Day of Week', fontsize=9)
+plt.ylabel('Total Revenue ($)', fontsize=9)
+plt.title('Weekly Revenue Pattern', fontsize=10)
+plt.xticks(rotation=45, fontsize=8)
+plt.yticks(fontsize=8)
 
 # Plot 3: Hourly Heatmap
-# plt.subplot(3, 3, 3)
-# hourly_revenue = df.pivot_table(values='money', index='hour', columns='day_of_week', aggfunc='sum', fill_value=0)
-# hourly_revenue = hourly_revenue[[d for d in day_order if d in hourly_revenue.columns]]
-# sns.heatmap(hourly_revenue, annot=True, fmt='.0f', cmap='YlOrRd', cbar_kws={'label': 'Revenue ($)'})
-# plt.title('Revenue Heatmap: Hour × Day')
-# plt.xlabel('Day of Week')
-# plt.ylabel('Hour of Day')
-
+plt.subplot(3, 3, 3)
+hourly_revenue = df.pivot_table(values='money', index='hour', columns='day_of_week', aggfunc='sum', fill_value=0)
+hourly_revenue = hourly_revenue[[d for d in day_order if d in hourly_revenue.columns]]
+sns.heatmap(hourly_revenue, annot=True, fmt='.0f', cmap='YlOrRd', annot_kws={'fontsize': 6}, cbar_kws={'label': 'Revenue ($)'})
+plt.title('Revenue Heatmap: Hour × Day', fontsize=10)
+plt.xlabel('Day of Week', fontsize=9)
+plt.ylabel('Hour of Day', fontsize=9)
+plt.xticks(fontsize=7, rotation=45)
+plt.yticks(fontsize=7)
 # Plot 4: Customer Spending Distribution
-# plt.subplot(3, 3, 4)
-# plt.hist(df['money'], bins=30, color='purple', alpha=0.7, edgecolor='black')
-# plt.axvline(df['money'].mean(), color='red', linestyle='--', linewidth=2, label=f'Mean: ${df["money"].mean():.2f}')
-# plt.axvline(df['money'].median(), color='orange', linestyle='--', linewidth=2, label=f'Median: ${df["money"].median():.2f}')
-# # Mark anomalies
-# if len(anomalies_ml) > 0:
-#     for val in anomalies_ml['money'].unique()[:5]:  # Show first 5 unique anomaly values
-#         plt.axvline(val, color='green', linestyle=':', alpha=0.5)
-# plt.xlabel('Transaction Amount ($)')
-# plt.ylabel('Frequency')
-# plt.title('Transaction Amount Distribution')
-# plt.legend()
+plt.subplot(3, 3, 4)
+plt.hist(df['money'], bins=30, color='purple', alpha=0.7, edgecolor='black')
+plt.axvline(df['money'].mean(), color='red', linestyle='--', linewidth=2, label=f'Mean: ${df["money"].mean():.2f}')
+plt.axvline(df['money'].median(), color='orange', linestyle='--', linewidth=2, label=f'Median: ${df["money"].median():.2f}')
+#  Mark anomalies
+if len(anomalies_ml) > 0:
+    for val in anomalies_ml['money'].unique()[:5]:  # Show first 5 unique anomaly values
+        plt.axvline(val, color='green', linestyle=':', alpha=0.5)
+plt.xlabel('Transaction Amount ($)', fontsize=9)
+plt.ylabel('Frequency', fontsize=9)
+plt.title('Transaction Amount Distribution', fontsize=10)
+plt.legend(fontsize=7)
+plt.xticks(fontsize=8)
+plt.yticks(fontsize=8)
 
 # Plot 5: Product Popularity Over Time
-# plt.subplot(3, 3, 5)
-# top5_products = df['coffee_name'].value_counts().head(5).index
-# for product in top5_products:
-#     product_daily = df[df['coffee_name'] == product].groupby('date').size()
-#     plt.plot(product_daily.index, product_daily.values, marker='o', label=product, linewidth=1.5)
-# plt.xlabel('Date')
-# plt.ylabel('Number of Sales')
-# plt.title('Top 5 Products: Sales Trend')
-# plt.legend(fontsize=8)
-# plt.xticks(rotation=45)
-# plt.grid(True, alpha=0.3)
+plt.subplot(3, 3, 5)
+top5_products = df['coffee_name'].value_counts().head(5).index
+for product in top5_products:
+    product_daily = df[df['coffee_name'] == product].groupby('date').size()
+    plt.plot(product_daily.index, product_daily.values, marker='o', label=product, linewidth=1.5)
+plt.xlabel('Date', fontsize=9)
+plt.ylabel('Number of Sales', fontsize=9)
+plt.title('Top 5 Products: Sales Trend', fontsize=10)
+plt.legend(fontsize=6, loc='best')
+plt.xticks(rotation=45, fontsize=7)
+plt.yticks(fontsize=8)
+plt.grid(True, alpha=0.3)
 
 # Plot 6: Payment Method by Hour
-# plt.subplot(3, 3, 6)
-# payment_by_hour.plot(kind='bar', stacked=True, color=['lightcoral', 'lightgreen'])
-# plt.xlabel('Hour of Day')
-# plt.ylabel('Percentage (%)')
-# plt.title('Payment Method Distribution by Hour')
-# plt.legend(title='Payment Type')
-# plt.xticks(rotation=0)
+plt.subplot(3, 3, 6)
+payment_by_hour.plot(kind='bar', stacked=True, color=['lightcoral', 'lightgreen'], ax=plt.gca())
+plt.xlabel('Hour of Day', fontsize=9)
+plt.ylabel('Percentage (%)', fontsize=9)
+plt.title('Payment Method Distribution by Hour', fontsize=10)
+plt.legend(title='Payment Type', fontsize=7)
+plt.xticks(rotation=0, fontsize=8)
+plt.yticks(fontsize=8)
 
 # Plot 7: Box Plot - Revenue by Day of Week
-# bplot(3, 3, 7)
-# day_order_present = [d for d in day_order if d in df['day_of_week'].values]
-# sns.boxplot(data=df, x='day_of_week', y='money', order=day_order_present, palette='Set2')
-# plt.xlabel('Day of Week')plt.su
-# plt.ylabel('Transaction Amount ($)')
-# plt.title('Price Distribution by Day')
-# plt.xticks(rotation=45)
+plt.subplot(3, 3, 7)
+day_order_present = [d for d in day_order if d in df['day_of_week'].values]
+sns.boxplot(data=df, x='day_of_week', y='money', order=day_order_present, palette='Set2')
+plt.xlabel('Day of Week', fontsize=9)
+plt.ylabel('Transaction Amount ($)', fontsize=9)
+plt.title('Price Distribution by Day', fontsize=10)
+plt.xticks(rotation=45, fontsize=7)
+plt.yticks(fontsize=8)
 
 # Plot 8: Anomaly Detection Scatter
-# plt.subplot(3, 3, 8)
-# plt.scatter(df[~df['is_anomaly_ml']]['hour'], 
-#            df[~df['is_anomaly_ml']]['money'],
-#            alpha=0.5, s=30, label='Normal', color='blue')
-# plt.scatter(df[df['is_anomaly_ml']]['hour'], 
-#            df[df['is_anomaly_ml']]['money'],
-#            alpha=0.8, s=60, label='Anomaly', color='red', marker='X')
-# plt.xlabel('Hour of Day')
-# plt.ylabel('Transaction Amount ($)')
-# plt.title('Anomaly Detection: Hour vs Amount')
-# plt.legend()
-# plt.grid(True, alpha=0.3)
+plt.subplot(3, 3, 8)
+plt.scatter(df[~df['is_anomaly_ml']]['hour'], 
+           df[~df['is_anomaly_ml']]['money'],
+           alpha=0.5, s=30, label='Normal', color='blue')
+plt.scatter(df[df['is_anomaly_ml']]['hour'], 
+           df[df['is_anomaly_ml']]['money'],
+           alpha=0.8, s=60, label='Anomaly', color='red', marker='X')
+plt.xlabel('Hour of Day', fontsize=9)
+plt.ylabel('Transaction Amount ($)', fontsize=9)
+plt.title('Anomaly Detection: Hour vs Amount', fontsize=10)
+plt.legend(fontsize=7)
+plt.xticks(fontsize=8)
+plt.yticks(fontsize=8)
+plt.grid(True, alpha=0.3)
 
 # Plot 9: Cumulative Revenue Growth
-# plt.subplot(3, 3, 9)
-# daily_ts['cumulative_revenue'] = daily_ts['revenue'].cumsum()
-# plt.plot(daily_ts.index, daily_ts['cumulative_revenue'], linewidth=2, color='green')
-# plt.fill_between(daily_ts.index, 0, daily_ts['cumulative_revenue'], alpha=0.3, color='green')
-# plt.xlabel('Date')
-# plt.ylabel('Cumulative Revenue ($)')
-# plt.title('Cumulative Revenue Growth')
-# plt.xticks(rotation=45)
-# plt.grid(True, alpha=0.3)
+plt.subplot(3, 3, 9)
+daily_ts['cumulative_revenue'] = daily_ts['revenue'].cumsum()
+plt.plot(daily_ts.index, daily_ts['cumulative_revenue'], linewidth=2, color='green')
+plt.fill_between(daily_ts.index, 0, daily_ts['cumulative_revenue'], alpha=0.3, color='green')
+plt.xlabel('Date', fontsize=9)
+plt.ylabel('Cumulative Revenue ($)', fontsize=9)
+plt.title('Cumulative Revenue Growth', fontsize=10)
+plt.xticks(rotation=45, fontsize=8)
+plt.yticks(fontsize=8)
+plt.grid(True, alpha=0.3)
 
-# plt.tight_layout()
-# plt.savefig('advanced_analysis_visualization.png', dpi=300, bbox_inches='tight')
-# print('\n✅ Visualization saved as: advanced_analysis_visualization.png')
-# plt.show()
+plt.tight_layout(pad=2.0, h_pad=2.5, w_pad=2.5)
+plt.savefig('advanced_analysis_visualization.png', dpi=300, bbox_inches='tight')
+print('\n✅ Visualization saved as: advanced_analysis_visualization.png')
+plt.show()
+
 
 # =============================
 # 5. KEY INSIGHTS & RECOMMENDATIONS
 # =============================
-# print('\n' + '='*70)
-# print('5. KEY INSIGHTS & RECOMMENDATIONS')
-# print('='*70)
+print('\n' + '='*70)
+print('5. KEY INSIGHTS & RECOMMENDATIONS')
+print('='*70)
 
-# print("\n📊 TIME SERIES INSIGHTS:")
-# print(f"   • Revenue trend: {'Growing' if daily_ts['revenue'].iloc[-7:].mean() > daily_ts['revenue'].iloc[:7].mean() else 'Declining'}")
-# print(f"   • Peak day: {weekly_pattern['total_revenue'].idxmax()}")
-# print(f"   • Peak hour: {hourly_pattern['revenue'].idxmax()}:00")
-# print(f"   • Weekend impact: {weekend_comparison.loc['Weekend', 'revenue'] - weekend_comparison.loc['Weekday', 'revenue']:.2f} more revenue")
+print("\n📊 TIME SERIES INSIGHTS:")
+print(f"   • Revenue trend: {'Growing' if daily_ts['revenue'].iloc[-7:].mean() > daily_ts['revenue'].iloc[:7].mean() else 'Declining'}")
+print(f"   • Peak day: {weekly_pattern['total_revenue'].idxmax()}")
+print(f"   • Peak hour: {hourly_pattern['revenue'].idxmax()}:00")
+print(f"   • Weekend impact: {weekend_comparison.loc['Weekend', 'revenue'] - weekend_comparison.loc['Weekday', 'revenue']:.2f} more revenue")
 
-# print("\n👥 CUSTOMER BEHAVIOR:")
-# print(f"   • Most popular product: {product_behavior.index[0]}")
-# print(f"   • Card usage: {payment_stats.loc['card', 'percentage']:.1f}%")
-# print(f"   • Premium customers: {spending_segments.loc['Premium', 'percentage']:.1f}%")
+print("\n👥 CUSTOMER BEHAVIOR:")
+print(f"   • Most popular product: {product_behavior.index[0]}")
+payment_stats = df['cash_type'].value_counts()
+payment_stats_pct = (payment_stats / len(df) * 100).round(1)
+card_usage = payment_stats_pct.get('card', 0)
+print(f"   • Card usage: {card_usage:.1f}%")
+print(f"   • Premium customers: {spending_segments.loc['Premium', 'percentage']:.1f}%")
 
-# print("\n⚠️ ANOMALIES DETECTED:")
-# print(f"   • Statistical outliers: {len(anomaly_days_zscore)} days")
-# print(f"   • ML-detected anomalies: {len(anomalies_ml)} transactions ({len(anomalies_ml)/len(df)*100:.1f}%)")
-# print(f"   • Most anomalous products: {anomalies_ml['coffee_name'].value_counts().head(3).to_dict() if len(anomalies_ml) > 0 else 'None'}")
+print("\n⚠️ ANOMALIES DETECTED:")
+print(f"   • Statistical outliers: {len(anomaly_days_zscore)} days")
+print(f"   • ML-detected anomalies: {len(anomalies_ml)} transactions ({len(anomalies_ml)/len(df)*100:.1f}%)")
+print(f"   • Most anomalous products: {anomalies_ml['coffee_name'].value_counts().head(3).to_dict() if len(anomalies_ml) > 0 else 'None'}")
 
-# print("\n💡 RECOMMENDATIONS:")
-# print(f"   1. Focus marketing on {weekly_pattern['total_revenue'].idxmin()} (lowest revenue day)")
-# print(f"   2. Staff optimization: peak hours are {hourly_pattern.nlargest(3, 'transactions').index.tolist()}")
-# print(f"   3. Investigate anomalous transactions for potential fraud or data errors")
-# print(f"   4. Promote premium products during {price_by_hour['mean'].idxmax()}:00 (highest spending hour)")
-# print(f"   5. Weekend promotions for card users (higher card usage: {payment_by_hour.loc[payment_by_hour.index >= 12, 'card'].mean():.1f}%)")
+print("\n💡 RECOMMENDATIONS:")
+print(f"   1. Focus marketing on {weekly_pattern['total_revenue'].idxmin()} (lowest revenue day)")
+print(f"   2. Staff optimization: peak hours are {hourly_pattern.nlargest(3, 'transactions').index.tolist()}")
+print(f"   3. Investigate anomalous transactions for potential fraud or data errors")
+print(f"   4. Promote premium products during {price_by_hour['mean'].idxmax()}:00 (highest spending hour)")
+print(f"   5. Weekend promotions for card users (higher card usage: {payment_by_hour.loc[payment_by_hour.index >= 12, 'card'].mean():.1f}%)")
 
-# print('\n' + '='*70)
-# print('Advanced Analysis Complete!')
-# print('='*70)
+print('\n' + '='*70)
+print('Advanced Analysis Complete!')
+print('='*70)
+
+# save file advanced_analysis_results.txt
+analysis_results_filepath = 'advanced_analysis_results.txt'
+with open(analysis_results_filepath, 'w') as f:
+    f.write('ADVANCED: TIME SERIES, CUSTOMER BEHAVIOR & ANOMALY DETECTION\n')
+    f.write('='*70 + '\n\n')
+    
+    f.write('1. TIME SERIES ANALYSIS\n')
+    f.write('-'*70 + '\n')
+    f.write(daily_ts.describe().to_string() + '\n\n')
+    f.write('Weekly Seasonality:\n')
+    f.write(weekly_pattern.to_string() + '\n\n')
+    f.write('Hourly Patterns:\n')
+    f.write(hourly_pattern.to_string() + '\n\n')
+    
+    f.write('2. CUSTOMER BEHAVIOR ANALYSIS\n')
+    f.write('-'*70 + '\n')
+    f.write('Product Preferences:\n')
+    f.write(product_behavior.head(10).to_string() + '\n\n')
+    f.write('Payment Method Behavior:\n')
+    f.write(payment_by_hour.round(2).to_string() + '\n\n')
+    f.write('Price Sensitivity by Time:\n')
+    f.write(price_by_hour.to_string() + '\n\n')
+    f.write('Weekend vs Weekday Comparison:\n')
+    f.write(weekend_comparison.to_string() + '\n\n')
+    f.write('Customer Spending Segments:\n')
+    f.write(spending_segments.to_string() + '\n\n')
+    
+    f.write('3. ANOMALY DETECTION\n')
+    f.write('-'*70 + '\n')
+    f.write(f"Detected {len(anomaly_days_zscore)} anomalous days using Z-score method\n")
+    if len(anomaly_days_zscore) > 0:
+        f.write(anomaly_days_zscore[['revenue', 'transactions', 'z_score']].to_string() + '\n\n')
+    
+    f.write(f"Detected {len(anomaly_days_iqr)} outlier days using IQR method\n")
+    if len(anomaly_days_iqr) > 0:
+        f.write(anomaly_days_iqr[['revenue', 'transactions']].to_string() + '\n\n')
+    
+    f.write(f"Detected {len(anomalies_ml)} anomalous transactions using Isolation Forest\n")
+    if len(anomalies_ml) > 0:
+        f.write(anomalies_ml[['date', 'hour', 'coffee_name', 'money', 'cash_type']].head(10).to_string() + '\n\n')

@@ -1,0 +1,145 @@
+ADVANCED: TIME SERIES, CUSTOMER BEHAVIOR & ANOMALY DETECTION
+======================================================================
+
+1. TIME SERIES ANALYSIS
+----------------------------------------------------------------------
+          revenue  transactions  avg_transaction  card_percentage  revenue_ma7  revenue_std7  transactions_moving_avg_7d  revenue_trend    z_score  cumulative_revenue
+count   41.000000     41.000000        41.000000        41.000000    41.000000     40.000000                   41.000000      41.000000  41.000000           41.000000
+mean   168.048780      6.390244        26.326098        68.900488   171.909466     97.669809                    6.545006      -3.860685   0.807538         3573.804878
+std     93.519236      3.597764         2.200419        28.164870    32.080833     41.645780                    1.232897      84.618225   0.597142         2005.819075
+min     27.000000      1.000000        20.000000         0.000000   126.285714     43.750918                    4.857143    -162.000000   0.064427          196.000000
+25%    105.000000      4.000000        25.450000        54.550000   154.285714     65.531610                    5.857143     -63.428571   0.475808         1839.000000
+50%    140.000000      5.000000        26.500000        75.000000   164.285714     83.271590                    6.142857     -25.571429   0.650078         3589.000000
+75%    215.000000      8.000000        27.750000       100.000000   182.857143    132.592622                    7.142857      59.428571   0.985678         5290.000000
+max    444.000000     17.000000        31.000000       100.000000   320.000000    187.240487                   12.000000     209.571429   2.987399         6890.000000
+
+Weekly Seasonality:
+             total_revenue  transactions  avg_transaction
+day_of_week                                              
+Monday                 789            30            26.30
+Tuesday                511            19            26.89
+Wednesday             1089            43            25.33
+Thursday               548            20            27.40
+Friday                1100            42            26.19
+Saturday              1240            49            25.31
+Sunday                1613            59            27.34
+
+Hourly Patterns:
+      revenue  transactions  avg_transaction
+hour                                        
+7         221             8            27.62
+8         312            11            28.36
+9         268            11            24.36
+10        363            14            25.93
+11        562            22            25.55
+12        522            22            23.73
+13        340            14            24.29
+14        440            17            25.88
+15        591            22            26.86
+16        625            24            26.04
+17        612            23            26.61
+18        730            27            27.04
+19        495            18            27.50
+20        165             6            27.50
+21        370            13            28.46
+22        187             7            26.71
+23         87             3            29.00
+
+2. CUSTOMER BEHAVIOR ANALYSIS
+----------------------------------------------------------------------
+Product Preferences:
+                           purchase_count  total_revenue  avg_price  card_pref_%  popularity_score
+coffee_name                                                                                       
+americano with milk                    44           1100      25.00        63.64             16.79
+latte                                  24            792      33.00        83.33              9.16
+irish whiskey                          21            525      25.00        76.19              8.02
+espresso                               18            373      20.72        50.00              6.87
+coffee with irish whiskey              16            464      29.00        81.25              6.11
+cappuccino                             16            480      30.00        68.75              6.11
+tea                                    16            240      15.00        62.50              6.11
+americano                              15            375      25.00        60.00              5.73
+irish whiskey with milk                15            405      27.00        80.00              5.73
+double irish whiskey                   12            336      28.00        83.33              4.58
+
+Payment Method Behavior:
+cash_type    card   cash
+hour                    
+7           87.50  12.50
+8           72.73  27.27
+9           45.45  54.55
+10          42.86  57.14
+11          77.27  22.73
+12          54.55  45.45
+13          64.29  35.71
+14          58.82  41.18
+15          72.73  27.27
+16          75.00  25.00
+17          56.52  43.48
+18          81.48  18.52
+19          72.22  27.78
+20          83.33  16.67
+21          92.31   7.69
+22          85.71  14.29
+23         100.00   0.00
+
+Price Sensitivity by Time:
+       mean   std  min  max  coefficient_variation
+hour                                              
+7     27.62  4.60   20   33                  16.65
+8     28.36  2.38   25   32                   8.39
+9     24.36  3.93   15   30                  16.13
+10    25.93  1.49   25   30                   5.75
+11    25.55  4.48   15   33                  17.53
+12    23.73  5.43   15   33                  22.88
+13    24.29  5.18   15   33                  21.33
+14    25.88  5.54   15   33                  21.41
+15    26.86  3.73   15   33                  13.89
+16    26.04  4.46   15   33                  17.13
+17    26.61  4.44   15   33                  16.69
+18    27.04  4.46   15   33                  16.49
+19    27.50  2.73   20   33                   9.93
+20    27.50  2.95   25   33                  10.73
+21    28.46  2.57   25   33                   9.03
+22    26.71  2.21   25   30                   8.27
+23    29.00  1.00   28   30                   3.45
+
+Weekend vs Weekday Comparison:
+         transactions  revenue  avg_transaction  card_%
+Weekday           154     4037            26.21   67.53
+Weekend           108     2853            26.42   72.22
+
+Customer Spending Segments:
+                   customers  total_spent  avg_spent  percentage
+spending_category                                               
+Budget                    34          600      17.65       12.98
+Standard                  86         2147      24.97       32.82
+Premium                  115         3254      28.30       43.89
+Luxury                    27          889      32.93       10.31
+
+3. ANOMALY DETECTION
+----------------------------------------------------------------------
+Detected 2 anomalous days using Z-score method
+            revenue  transactions   z_score
+date                                       
+2025-02-09      444            16  2.987399
+2025-02-26      405            17  2.565192
+
+Detected 2 outlier days using IQR method
+            revenue  transactions
+date                             
+2025-02-09      444            16
+2025-02-26      405            17
+
+Detected 14 anomalous transactions using Isolation Forest
+          date  hour          coffee_name  money cash_type
+21  2025-02-09    18                  tea     15      card
+27  2025-02-11     9                  tea     15      card
+38  2025-02-14    19             espresso     20      card
+53  2025-02-16    16       double vanilla     20      cash
+58  2025-02-17     7             espresso     20      card
+65  2025-02-17    22  americano with milk     25      cash
+95  2025-02-21    18                  tea     15      cash
+104 2025-02-24    13                  tea     15      card
+115 2025-02-26    11                  tea     15      cash
+128 2025-02-27    17                  tea     15      cash
+
